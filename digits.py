@@ -211,7 +211,7 @@ class Assignment:
             w = w + dw
             b = b + db
 
-            if (epoch + 1) in [2, 5, 10, 15, 20, 40, 60, 80, 100, 200, 400, 600, 800, 1000]: 
+            if (epoch + 1) % 100 == 0: 
                 print "--------------- Set " + str(epoch + 1) + "------------------"
                 print "Correction Rate For Train: " + str(self.EvaluateSimpleNNCorrection(inputs_train, target_train, w, b))
                 print "Correction Rate For Test: " + str(self.EvaluateSimpleNNCorrection(inputs_test, target_test, w, b))
@@ -262,6 +262,53 @@ class Assignment:
         plt.show()
 
 
+    def getCorrectFaces(self, w, b):
+        inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
+        predictionPercentage = self.forwardPropagation(w, inputs_test, b)    
+        predictionPercentage = self.softmax(predictionPercentage)   
+        predictionPercentageList =  predictionPercentage.T
+        prediction = []
+        for predictionInstance in predictionPercentageList:
+            prediction.append(argmax(predictionInstance))
+
+        
+        target = target_test[0]
+        totalCount = len(target)
+        correctCount = 0
+        f, axarr = plt.subplots(4, 5)
+        for index in range(totalCount):
+            if target[index] == prediction[index] and correctCount < 20:
+                axarr[int(correctCount)/5, correctCount%5].imshow(inputs_test.T[index].reshape(28,28),  cmap=cm.gray)
+                axarr[correctCount/5, correctCount%5].get_yaxis().set_visible(False)
+                axarr[correctCount/5, correctCount%5].get_xaxis().set_visible(False)
+                correctCount+=1
+        
+        plt.show()
+
+
+    def getIncorrectFaces(self, w, b):
+        inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
+        predictionPercentage = self.forwardPropagation(w, inputs_test, b)    
+        predictionPercentage = self.softmax(predictionPercentage)   
+        predictionPercentageList =  predictionPercentage.T
+        prediction = []
+        for predictionInstance in predictionPercentageList:
+            prediction.append(argmax(predictionInstance))
+
+        
+        target = target_test[0]
+        totalCount = len(target)
+        correctCount = 0
+        f, axarr = plt.subplots(2, 5)
+        for index in range(totalCount):
+            if target[index] != prediction[index] and correctCount < 10:
+                axarr[int(correctCount)/5, correctCount%5].imshow(inputs_test.T[index].reshape(28,28),  cmap=cm.gray)
+                axarr[correctCount/5, correctCount%5].get_yaxis().set_visible(False)
+                axarr[correctCount/5, correctCount%5].get_xaxis().set_visible(False)
+                correctCount+=1
+        
+        plt.show()
+
     def partFive(self):
         learningRate = 0.01
         momentum = 0.5
@@ -269,6 +316,8 @@ class Assignment:
         w, b = self.trainSimpleNN(learningRate, momentum, num_epochs)
         #self.plotCorrectionRateGraph()
         #self.plotNegativeLogRateGraph()
+        #self.getCorrectFaces(w, b)
+        self.getIncorrectFaces(w, b)
 
 
 
@@ -280,7 +329,6 @@ if __name__ == "__main__":
 
     #PART 4: RuntimeWarning: overflow encountered in multiply
     #hw.partFour()
-
     hw.partFive()
 
 
