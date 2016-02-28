@@ -14,8 +14,8 @@ import os
 from scipy.io import loadmat
 
 
-    
-def tanh_layer(y, W, b):    
+
+def tanh_layer(y, W, b):
     '''Return the output of a tanh layer for the input matrix y. y
     is an NxM matrix where N is the number of inputs for a single case, and M
     is the number of cases'''
@@ -27,7 +27,7 @@ def forward(x, W0, b0, W1, b1):
     #L1 = dot(W1.T, L0) + b1 if you don't want tanh at the top layer
     output = softmax(L1)
     return L0, L1, output
-    
+
 
 
 def deriv_multilayer(W0, b0, W1, b1, x, L0, L1, y, y_):
@@ -36,7 +36,7 @@ def deriv_multilayer(W0, b0, W1, b1, x, L0, L1, y, y_):
     dCdL1 =  y - y_
     #dCdW1 =  dot(L0, dCdL1.T ) if you don't want the nonlinearity at the top layer
     dCdW1 =  dot(L0, ((1- L1**2)*dCdL1).T )
-    
+
 
 
 class Assignment:
@@ -51,7 +51,7 @@ class Assignment:
     def getDataByKey(self, numberKey, count):
         resultDataSet = []
         requestedDataSet = self.numbers[numberKey]
-        for index in range(count): 
+        for index in range(count):
             resultDataSet.append(requestedDataSet[index]/float(255))
         return resultDataSet
 
@@ -102,8 +102,7 @@ class Assignment:
         plt.show()
 
     def forwardPropagation(self, w, x, b):
-        alpha = np.dot(w.T, x) + b.T
-        prediction = 1 / (1 + np.exp(-alpha))
+        prediction = np.dot(w.T, x) + b.T
         return prediction
 
     def softmax(self, y):
@@ -124,7 +123,7 @@ class Assignment:
     def calculateCost(self, prediction, target):
         return -sum(target*log(prediction))
 
-    def getPercentageListFromTarget(self, target): 
+    def getPercentageListFromTarget(self, target):
         result = []
         for targetInstance in target[0]:
             instancePercentage = [0] * 10
@@ -135,15 +134,15 @@ class Assignment:
 
     def calculateGradientDecent(self, w, x, b, target_train):
         # Forward propagation
-        prediction = self.forwardPropagation(w, x, b)    
-        prediction = self.softmax(prediction)    
+        prediction = self.forwardPropagation(w, x, b)
+        prediction = self.softmax(prediction)
         target = self.getPercentageListFromTarget(target_train)
         # Compute Deriv
         dEbydlogit = prediction - target
         dEbydw = np.dot(x, dEbydlogit.T)
         dEbydb = np.sum(dEbydlogit, axis=1).reshape(-1, 1).T
         return dEbydw, dEbydb
-    
+
     def partThree(self):
         inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
         x = inputs_train
@@ -160,12 +159,12 @@ class Assignment:
         x = vstack( (ones((1, x.shape[1])), x))
         # RuntimeWarning: overflow encountered in multiply
         return -2*dot(x, (y-dot(theta.T, x).T))
-        
+
     def calculateGradientDecentByFiniteDifference(self, f, df, x, y, init_t, alpha):
         EPS = 1e-5   #EPS = 10**(-5)
         prev_t = init_t-10*EPS
         t = init_t.copy()
-        
+
         while norm(t - prev_t) >  EPS:
             prev_t = t.copy()
             t -= alpha*self.df(x, y, t)
@@ -195,10 +194,10 @@ class Assignment:
         num_train_cases = inputs_train.shape[1]
         for epoch in xrange(num_epochs):
             # Forward propagation
-            prediction = self.forwardPropagation(w, x, b)    
-            prediction = self.softmax(prediction)    
+            prediction = self.forwardPropagation(w, x, b)
+            prediction = self.softmax(prediction)
             target = self.getPercentageListFromTarget(target_train)
-            
+
             # Compute Deriv
             dEbydlogit = prediction - target
             dEbydw = np.dot(x, dEbydlogit.T)
@@ -211,7 +210,7 @@ class Assignment:
             w = w + dw
             b = b + db
 
-            if (epoch + 1) % 100 == 0: 
+            if (epoch + 1) % 100 == 0:
                 print "--------------- Set " + str(epoch + 1) + "------------------"
                 print "Correction Rate For Train: " + str(self.EvaluateSimpleNNCorrection(inputs_train, target_train, w, b))
                 print "Correction Rate For Test: " + str(self.EvaluateSimpleNNCorrection(inputs_test, target_test, w, b))
@@ -222,8 +221,8 @@ class Assignment:
 
     def EvaluateSimpleNNCorrection(self, inputs_train, target_train, w, b):
         # Forward propagation
-        predictionPercentage = self.forwardPropagation(w, inputs_train, b)    
-        predictionPercentage = self.softmax(predictionPercentage)   
+        predictionPercentage = self.forwardPropagation(w, inputs_train, b)
+        predictionPercentage = self.softmax(predictionPercentage)
         predictionPercentageList =  predictionPercentage.T
         prediction = []
         for predictionInstance in predictionPercentageList:
@@ -240,9 +239,9 @@ class Assignment:
 
     def EvaluateSimpleNNNegativeLog(self, inputs_train, target_train, w, b):
         # Forward propagation
-        predictionPercentage = self.softmax(self.forwardPropagation(w, inputs_train, b)   )   
+        predictionPercentage = self.softmax(self.forwardPropagation(w, inputs_train, b)   )
         targetPercentage = self.getPercentageListFromTarget(target_train)
-        return -np.mean(targetPercentage * np.log(predictionPercentage) + (1 - targetPercentage) * np.log(1 - predictionPercentage))  
+        return -np.mean(targetPercentage * np.log(predictionPercentage) + (1 - targetPercentage) * np.log(1 - predictionPercentage))
 
 
     def plotCorrectionRateGraph(self):
@@ -264,14 +263,14 @@ class Assignment:
 
     def getCorrectFaces(self, w, b):
         inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
-        predictionPercentage = self.forwardPropagation(w, inputs_test, b)    
-        predictionPercentage = self.softmax(predictionPercentage)   
+        predictionPercentage = self.forwardPropagation(w, inputs_test, b)
+        predictionPercentage = self.softmax(predictionPercentage)
         predictionPercentageList =  predictionPercentage.T
         prediction = []
         for predictionInstance in predictionPercentageList:
             prediction.append(argmax(predictionInstance))
 
-        
+
         target = target_test[0]
         totalCount = len(target)
         correctCount = 0
@@ -282,20 +281,20 @@ class Assignment:
                 axarr[correctCount/5, correctCount%5].get_yaxis().set_visible(False)
                 axarr[correctCount/5, correctCount%5].get_xaxis().set_visible(False)
                 correctCount+=1
-        
+
         plt.show()
 
 
     def getIncorrectFaces(self, w, b):
         inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
-        predictionPercentage = self.forwardPropagation(w, inputs_test, b)    
-        predictionPercentage = self.softmax(predictionPercentage)   
+        predictionPercentage = self.forwardPropagation(w, inputs_test, b)
+        predictionPercentage = self.softmax(predictionPercentage)
         predictionPercentageList =  predictionPercentage.T
         prediction = []
         for predictionInstance in predictionPercentageList:
             prediction.append(argmax(predictionInstance))
 
-        
+
         target = target_test[0]
         totalCount = len(target)
         correctCount = 0
@@ -306,7 +305,7 @@ class Assignment:
                 axarr[correctCount/5, correctCount%5].get_yaxis().set_visible(False)
                 axarr[correctCount/5, correctCount%5].get_xaxis().set_visible(False)
                 correctCount+=1
-        
+
         plt.show()
 
     def partFive(self):
@@ -324,12 +323,12 @@ class Assignment:
         momentum = 0.5
         num_epochs = 1000
         w, b = self.trainSimpleNN(learningRate, momentum, num_epochs)
-        
+
 
         #Code for displaying a feature from the weight matrix mW
         fig = figure(1)
         ax = fig.gca()
-        heatmap = ax.imshow(w.T[0].reshape((28,28)), cmap = cm.coolwarm)    
+        heatmap = ax.imshow(w.T[0].reshape((28,28)), cmap = cm.coolwarm)
         fig.colorbar(heatmap, shrink = 0.5, aspect=5)
         show()
 
@@ -340,7 +339,7 @@ if __name__ == "__main__":
     # hw.partThree()
     #PART 4: RuntimeWarning: overflow encountered in multiply
     #hw.partFour()
-    #hw.partFive()
+    hw.partFive()
     #hw.partSix()
 
 
@@ -356,7 +355,7 @@ if __name__ == "__main__":
 
 # #Load one example from the training set, and run it through the
 # #neural network
-# x = M["train5"][148:149].T    
+# x = M["train5"][148:149].T
 # L0, L1, output = forward(x, W0, b0, W1, b1)
 # #get the index at which the output is the largest
 # y = argmax(output)
@@ -364,8 +363,8 @@ if __name__ == "__main__":
 ################################################################################
 #Code for displaying a feature from the weight matrix mW
 #fig = figure(1)
-#ax = fig.gca()    
-#heatmap = ax.imshow(mW[:,50].reshape((28,28)), cmap = cm.coolwarm)    
+#ax = fig.gca()
+#heatmap = ax.imshow(mW[:,50].reshape((28,28)), cmap = cm.coolwarm)
 #fig.colorbar(heatmap, shrink = 0.5, aspect=5)
 #show()
 ################################################################################
