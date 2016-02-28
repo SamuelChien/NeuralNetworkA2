@@ -12,7 +12,7 @@ from numpy import random
 import cPickle
 import os
 from scipy.io import loadmat
-
+from IPython import embed
 
 
 def tanh_layer(y, W, b):
@@ -331,6 +331,81 @@ class Assignment:
         heatmap = ax.imshow(w.T[0].reshape((28,28)), cmap = cm.coolwarm)
         fig.colorbar(heatmap, shrink = 0.5, aspect=5)
         show()
+    def EvaluateTanhNNCorrection(self, inputs_train, target_train, w0, b0, w1, b1):
+        # Forward propagation
+        L0 = np.tanh(np.dot(w0.T, inputs_train) + b0) #zj
+        L1 = np.tanh(np.dot(w1.T, L0) + b1)
+        output = self.softmax(L1)
+        predictionPercentageList =  output.T
+        prediction = []
+        for predictionInstance in predictionPercentageList:
+            prediction.append(argmax(predictionInstance))
+
+        target = target_train[0]
+        totalCount = len(target)
+        correctCount = 0
+        for index in range(totalCount):
+            if target[index] == prediction[index]:
+                correctCount+=1
+
+        return float(correctCount)/totalCount
+
+
+    def trainTanhNN(self, hidden_num, learningRate, momentum, num_epochs):
+        inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
+        x = inputs_train
+        target = self.getPercentageListFromTarget(target_train)
+        w0 = 0.01 * np.random.randn(inputs_train.shape[0], hidden_num) #weights input to hidden
+        b0 = np.zeros((hidden_num, 1))
+        w1 = 0.01 * np.random.randn(hidden_num, 10)
+        b1 = np.zeros((10,1))
+        dw0 = np.zeros(w0.shape)
+        db0 = np.zeros(b0.shape)
+        dw1 = np.zeros(w1.shape)
+        db1 = np.zeros(b1.shape)
+
+        train_error = []
+        valid_error = []
+        num_train_cases = inputs_train.shape[1]
+        for epoch in xrange(num_epochs):
+            # Forward propagation with tanh
+
+            # embed()
+            L0 = np.tanh(np.dot(w0.T, x) + b0) #zj
+            L1 = np.tanh(np.dot(w1.T, L0) + b1)
+            output = self.softmax(L1)
+
+            # Compute Deriv
+            dCdL1 = output - target #softmax
+            dCdw1 =  np.dot(L0, ((1- L1**2)*dCdL1).T ) #layer1
+            dCdb1 = np.sum((1- L1**2)*dCdL1, axis=1).reshape(-1,1)
+            dCdw0 = np.dot(x, ((1- L0**2)*np.dot(w1, dCdL1)).T)
+            dCdb0 = np.sum(((1- L0**2)*np.dot(w1, dCdL1)), axis=1).reshape(-1,1)
+
+            #%%%% Update the weights at the end of the epoch %%%%%%
+            dw0 = momentum * dw0 - (learningRate / num_train_cases) * dCdw0
+            db0 = momentum * db0 - (learningRate / num_train_cases) * dCdb0
+            dw1 = momentum * dw1 - (learningRate / num_train_cases) * dCdw1
+            db1 = momentum * db1 - (learningRate / num_train_cases) * dCdb1
+
+            w0 = w0 + dw0
+            b0 = b0 + db0
+            w1 = w1 + dw1
+            b1 = b1 + db1
+            if (epoch + 1) % 100 == 0:
+                print "--------------- Set " + str(epoch + 1) + "------------------"
+                print "Correction Rate For Train: " + str(self.EvaluateTanhNNCorrection(inputs_train, target_train, w0, b0, w1, b1))
+                print "Correction Rate For Test: " + str(self.EvaluateTanhNNCorrection(inputs_test, target_test, w0, b0, w1, b1))
+                # print "Negative Log For Train: " + str(self.EvaluateSimpleNNNegativeLog(inputs_train, target_train, w, b))
+                # print "Negative Log For Test: " + str(self.EvaluateSimpleNNNegativeLog(inputs_test, target_test, w, b))
+
+        return w0, b0, w1, b1
+    def partSeven(self):
+        learningRate = 0.01
+        momentum = 0.5
+        num_epochs = 1000
+        hidden_num = 300
+        w0, b0, w1, b1 = self.trainTanhNN(hidden_num, learningRate, momentum, num_epochs)
 
 if __name__ == "__main__":
     hw = Assignment()
@@ -339,7 +414,7 @@ if __name__ == "__main__":
     # hw.partThree()
     #PART 4: RuntimeWarning: overflow encountered in multiply
     #hw.partFour()
-    hw.partFive()
+    hw.partSeven()
     #hw.partSix()
 
 
