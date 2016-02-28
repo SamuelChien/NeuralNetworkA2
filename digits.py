@@ -317,19 +317,32 @@ class Assignment:
         #self.plotCorrectionRateGraph()
         #self.plotNegativeLogRateGraph()
         #self.getCorrectFaces(w, b)
-        self.getIncorrectFaces(w, b)
+        #self.getIncorrectFaces(w, b)
 
+    def partSix(self):
+        learningRate = 0.01
+        momentum = 0.5
+        num_epochs = 1000
+        w, b = self.trainSimpleNN(learningRate, momentum, num_epochs)
+        
 
+        #Code for displaying a feature from the weight matrix mW
+        fig = figure(1)
+        ax = fig.gca()
+        heatmap = ax.imshow(w.T[0].reshape((28,28)), cmap = cm.coolwarm)    
+        fig.colorbar(heatmap, shrink = 0.5, aspect=5)
+        show()
 
 if __name__ == "__main__":
     hw = Assignment()
     # hw.partOne()
     # hw.partTwo()
     # hw.partThree()
-
     #PART 4: RuntimeWarning: overflow encountered in multiply
     #hw.partFour()
-    hw.partFive()
+    #hw.partFive()
+    #hw.partSix()
+
 
 
     # #Load sample weights for the multilayer neural network
