@@ -211,14 +211,16 @@ class Assignment:
             w = w + dw
             b = b + db
 
+            if (epoch + 1) in [2, 5, 10, 15, 20, 40, 60, 80, 100, 200, 400, 600, 800, 1000]: 
+                print "--------------- Set " + str(epoch + 1) + "------------------"
+                print "Correction Rate For Train: " + str(self.EvaluateSimpleNNCorrection(inputs_train, target_train, w, b))
+                print "Correction Rate For Test: " + str(self.EvaluateSimpleNNCorrection(inputs_test, target_test, w, b))
+                print "Negative Log For Train: " + str(self.EvaluateSimpleNNNegativeLog(inputs_train, target_train, w, b))
+                print "Negative Log For Test: " + str(self.EvaluateSimpleNNNegativeLog(inputs_test, target_test, w, b))
 
-
-        print self.EvaluateSimpleNN(inputs_train, target_train, w, b)
-        print self.EvaluateSimpleNN(inputs_valid, target_valid, w, b)
-        print self.EvaluateSimpleNN(inputs_test, target_test, w, b)
         return w, b
 
-    def EvaluateSimpleNN(self, inputs_train, target_train, w, b):
+    def EvaluateSimpleNNCorrection(self, inputs_train, target_train, w, b):
         # Forward propagation
         predictionPercentage = self.forwardPropagation(w, inputs_train, b)    
         predictionPercentage = self.softmax(predictionPercentage)   
@@ -236,30 +238,28 @@ class Assignment:
 
         return float(correctCount)/totalCount
 
-    def EvaluateSimpleNNEntroy(self, inputs_train, target_train, w, b):
+    def EvaluateSimpleNNNegativeLog(self, inputs_train, target_train, w, b):
         # Forward propagation
-        predictionPercentage = self.forwardPropagation(w, inputs_train, b)    
-        predictionPercentage = self.softmax(predictionPercentage)   
-        predictionPercentageList =  predictionPercentage.T
-        prediction = []
-        for predictionInstance in predictionPercentageList:
-            prediction.append(argmax(predictionInstance))
+        predictionPercentage = self.softmax(self.forwardPropagation(w, inputs_train, b)   )   
+        targetPercentage = self.getPercentageListFromTarget(target_train)
+        return -np.mean(targetPercentage * np.log(predictionPercentage) + (1 - targetPercentage) * np.log(1 - predictionPercentage))  
 
-        target = target_train[0]
-        totalCount = len(target)
-        correctCount = 0
-        for index in range(totalCount):
-            if target[index] == prediction[index]:
-                correctCount+=1
 
-        return float(correctCount)/totalCount
+    def plotCorrectionRateGraph(self):
+        trainLine, = plt.plot([2, 5, 10, 15, 20, 40, 60, 80, 100], [0.176, 0.358, 0.55, 0.622, 0.655, 0.718, 0.736, 0.758, 0.776], label='Train')
+        testLine, = plt.plot([2, 5, 10, 15, 20, 40, 60, 80, 100], [0.165, 0.29, 0.45, 0.528, 0.555, 0.615, 0.645, 0.652, 0.652], label='Test')
+        plt.ylabel('Correctness(%)')
+        plt.xlabel('Learning Times')
+        plt.legend(handles=[trainLine, testLine])
+        plt.show()
 
-        # h_input = np.dot(W1.T, inputs) + b1  # Input to hidden layer.
-        # h_output = 1 / (1 + np.exp(-h_input))  # Output of hidden layer.
-        # logit = np.dot(W2.T, h_output) + b2  # Input to output layer.
-        # prediction = 1 / (1 + np.exp(-logit))  # Output prediction.
-        # CE = -np.mean(target * np.log(prediction) + (1 - target) * np.log(1 - prediction))
-  
+    def plotNegativeLogRateGraph(self):
+        trainLine, = plt.plot([2, 5, 10, 15, 20, 40, 60, 80, 100], [0.324, 0.322, 0.319, 0.316, 0.313, 0.303, 0.296, 0.291, 0.288], label='Train')
+        testLine, = plt.plot([2, 5, 10, 15, 20, 40, 60, 80, 100], [0.324, 0.323, 0.320, 0.318, 0.315, 0.306, 0.301, 0.295, 0.292], label='Test')
+        plt.ylabel('Negative Log')
+        plt.xlabel('Learning Times')
+        plt.legend(handles=[trainLine, testLine])
+        plt.show()
 
 
     def partFive(self):
@@ -267,6 +267,9 @@ class Assignment:
         momentum = 0.5
         num_epochs = 1000
         w, b = self.trainSimpleNN(learningRate, momentum, num_epochs)
+        #self.plotCorrectionRateGraph()
+        #self.plotNegativeLogRateGraph()
+
 
 
 if __name__ == "__main__":
