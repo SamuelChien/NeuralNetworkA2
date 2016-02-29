@@ -351,9 +351,11 @@ class Assignment:
         return float(correctCount)/totalCount
 
 
-    def trainTanhNN(self, hidden_num, learningRate, momentum, num_epochs):
+    def trainTanhNN(self, hidden_num, learningRate, momentum, num_epochs, batch_size=-1):
         inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = self.loadAllData()
+        # embed()
         x = inputs_train
+        num_train_cases = x.shape[1]
         target = self.getPercentageListFromTarget(target_train)
         w0 = 0.01 * np.random.randn(inputs_train.shape[0], hidden_num) #weights input to hidden
         b0 = np.zeros((hidden_num, 1))
@@ -364,34 +366,54 @@ class Assignment:
         dw1 = np.zeros(w1.shape)
         db1 = np.zeros(b1.shape)
 
+        if batch_size < 1:
+            batch_size = num_train_cases
+        # embed()
         train_error = []
         valid_error = []
-        num_train_cases = inputs_train.shape[1]
+        def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
+            assert len(inputs) == len(targets)
+            if shuffle:
+                indices = np.arange(len(inputs))
+                np.random.shuffle(indices)
+            for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+                if shuffle:
+                    excerpt = indices[start_idx:start_idx + batchsize]
+                else:
+                    excerpt = slice(start_idx, start_idx + batchsize)
+                yield inputs[excerpt], targets[excerpt]
+        # embed()
         for epoch in xrange(num_epochs):
             # Forward propagation with tanh
+            counter = 0
+            for batch in iterate_minibatches(x.T, target.T, batch_size, shuffle=True):
+                # print(counter)
+                counter += 1
+                inputs, targets = batch
+                inputs = inputs.T
+                targets = targets.T
+                # embed()
+                L0 = np.tanh(np.dot(w0.T, inputs) + b0) #zj
+                L1 = np.dot(w1.T, L0) + b1
+                output = self.softmax(L1)
+                # print(output.shape)
+                # Compute Deriv
+                dCdL1 = output - targets #softmax
+                dCdw1 =  np.dot(L0, dCdL1.T ) #layer1
+                dCdb1 = np.sum(dCdL1, axis=1).reshape(-1,1)
+                dCdw0 = np.dot(inputs, ((1- L0**2)*np.dot(w1, dCdL1)).T)
+                dCdb0 = np.sum(((1- L0**2)*np.dot(w1, dCdL1)), axis=1).reshape(-1,1)
 
-            # embed()
-            L0 = np.tanh(np.dot(w0.T, x) + b0) #zj
-            L1 = np.tanh(np.dot(w1.T, L0) + b1)
-            output = self.softmax(L1)
+                #%%%% Update the weights at the end of the epoch %%%%%%
+                dw0 = momentum * dw0 - (learningRate / batch_size) * dCdw0
+                db0 = momentum * db0 - (learningRate / batch_size) * dCdb0
+                dw1 = momentum * dw1 - (learningRate / batch_size) * dCdw1
+                db1 = momentum * db1 - (learningRate / batch_size) * dCdb1
 
-            # Compute Deriv
-            dCdL1 = output - target #softmax
-            dCdw1 =  np.dot(L0, ((1- L1**2)*dCdL1).T ) #layer1
-            dCdb1 = np.sum((1- L1**2)*dCdL1, axis=1).reshape(-1,1)
-            dCdw0 = np.dot(x, ((1- L0**2)*np.dot(w1, dCdL1)).T)
-            dCdb0 = np.sum(((1- L0**2)*np.dot(w1, dCdL1)), axis=1).reshape(-1,1)
-
-            #%%%% Update the weights at the end of the epoch %%%%%%
-            dw0 = momentum * dw0 - (learningRate / num_train_cases) * dCdw0
-            db0 = momentum * db0 - (learningRate / num_train_cases) * dCdb0
-            dw1 = momentum * dw1 - (learningRate / num_train_cases) * dCdw1
-            db1 = momentum * db1 - (learningRate / num_train_cases) * dCdb1
-
-            w0 = w0 + dw0
-            b0 = b0 + db0
-            w1 = w1 + dw1
-            b1 = b1 + db1
+                w0 = w0 + dw0
+                b0 = b0 + db0
+                w1 = w1 + dw1
+                b1 = b1 + db1
             if (epoch + 1) % 100 == 0:
                 print "--------------- Set " + str(epoch + 1) + "------------------"
                 print "Correction Rate For Train: " + str(self.EvaluateTanhNNCorrection(inputs_train, target_train, w0, b0, w1, b1))
@@ -401,11 +423,18 @@ class Assignment:
 
         return w0, b0, w1, b1
     def partSeven(self):
-        learningRate = 0.01
+        learningRate = 0.001
         momentum = 0.5
-        num_epochs = 1000
+        num_epochs = 4000
         hidden_num = 300
         w0, b0, w1, b1 = self.trainTanhNN(hidden_num, learningRate, momentum, num_epochs)
+    def partNine(self):
+        learningRate = 0.001
+        momentum = 0.5
+        num_epochs = 2000
+        hidden_num = 300
+        batch_size = 50
+        w0, b0, w1, b1 = self.trainTanhNN(hidden_num, learningRate, momentum, num_epochs, batch_size)
 
 if __name__ == "__main__":
     hw = Assignment()
@@ -414,7 +443,7 @@ if __name__ == "__main__":
     # hw.partThree()
     #PART 4: RuntimeWarning: overflow encountered in multiply
     #hw.partFour()
-    hw.partSeven()
+    hw.partNine()
     #hw.partSix()
 
 
